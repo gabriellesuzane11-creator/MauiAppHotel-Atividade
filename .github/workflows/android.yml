@@ -15,17 +15,18 @@ jobs:
       - name: Instalar .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.416'
 
       - name: Instalar MAUI Android
-        run: dotnet workload install maui-android
+        shell: pwsh
+        run: dotnet workload install maui-android --version 8.0.416
 
       - name: Gerar APK
         shell: pwsh
         run: |
           $projeto = Get-ChildItem -Recurse -Filter MauiAppHotel.csproj | Select-Object -First 1 -ExpandProperty FullName
-          if (-not $projeto) { throw "Projeto MauiAppHotel.csproj não encontrado" }
-          dotnet publish "$projeto" -f net8.0-android -c Release -p:AndroidPackageFormat=apk -p:AndroidKeyStore=false
+          if (-not $projeto) { throw "Projeto não encontrado" }
+          dotnet publish "$projeto" -f net8.0-android -c Release -p:AndroidPackageFormat=apk -p:AndroidKeyStore=false -p:CheckEolWorkloads=false
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Disponibilizar APK
@@ -34,3 +35,4 @@ jobs:
           name: aplicativo-hotel
           path: '**/*.apk'
           if-no-files-found: error
+
