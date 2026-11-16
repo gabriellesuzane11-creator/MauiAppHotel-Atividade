@@ -1,0 +1,36 @@
+
+name: Gerar APK Android
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Instalar MAUI Android
+        run: dotnet workload install maui-android
+
+      - name: Gerar APK
+        shell: pwsh
+        run: |
+          $projeto = Get-ChildItem -Recurse -Filter MauiAppHotel.csproj | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $projeto) { throw "Projeto MauiAppHotel.csproj não encontrado" }
+          dotnet publish "$projeto" -f net8.0-android -c Release -p:AndroidPackageFormat=apk -p:AndroidKeyStore=false
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: aplicativo-hotel
+          path: '**/*.apk'
+          if-no-files-found: error
